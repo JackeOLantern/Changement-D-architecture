@@ -80,8 +80,7 @@ void shr_reg(REG* regs, uint8_t Rd, uint8_t Rn, uint8_t Rm){
 
 void push_imm(REG* regs, uint8_t* vm_data, uint64_t imm){
 	uint64_t sp = regs[SP];
-	//assert(sp >= 0);
-	//assert(sp <= (vm_size + STACK_SIZE));
+	if(sp > (vm_size + STACK_SIZE)){ exit(0); };
 
 
 	memcpy((void *)(vm_data + sp), &imm, 8);
@@ -94,16 +93,14 @@ void push_regs(REG* regs, uint8_t* vm_data, uint64_t imm, uint8_t nb_regs){
 	
 	uint64_t sp ;
 
-	//assert(nb_regs <= 6);
+	if(nb_regs > 6){ exit(0); };
 
 	while (nb_regs > 0){
 		sp = regs[SP];
 
-		//assert(sp >= 0);
-		//assert(sp < (vm_size + STACK_SIZE)); // à completer avec les registers 
-		
+		if(sp > (vm_size + STACK_SIZE)){ exit(0); };
 		current_reg_nb = imm & 0xff;
-		//assert(current_reg_nb <= 8);
+		if(current_reg_nb > 8){ exit(0); };
 		
 		imm >>= 8;
 
@@ -120,14 +117,13 @@ void pop(REG* regs, uint8_t* vm_data, uint64_t imm, uint8_t nb_regs){
 	uint64_t value;
 	
 
-	//assert(nb_regs <= 6);
+	if(nb_regs > 6){ exit(0); };
 
 	while (nb_regs > 0){
-		//assert(regs[SP] >= 0);
-		//assert(regs[SP] < (vm_size + STACK_SIZE));
+		if(regs[SP] >= (vm_size + STACK_SIZE));
 	
 		current_reg_nb = imm & 0xff;
-		//assert(current_reg_nb <= 8);
+		if(current_reg_nb > 8){ exit(0); };
 		
 		imm >>= 8;
 		regs[SP] -= 8;
@@ -145,7 +141,7 @@ void ret(REG* regs, uint8_t* vm_data){
 	
 	opcode64 value;
 
-	//assert(regs[SP] < (vm_size + STACK_SIZE));
+	if(regs[SP] >= (vm_size + STACK_SIZE)){ exit(0); };
 	
 	regs[SP] -= 8;
 	
@@ -166,7 +162,7 @@ void ret(REG* regs, uint8_t* vm_data){
 
 void jmp(uint64_t imm){
 
-	//assert(imm <= vm_size + STACK_SIZE);
+	if(imm > vm_size + STACK_SIZE){ exit(0); };
 	if (imm & 1){
 		imm &= ~1;
 		flags |= FLAG_THUMB;
@@ -179,7 +175,7 @@ void jmp(uint64_t imm){
 }
 
 void ja(uint64_t imm){
-	//assert(imm <= vm_size + STACK_SIZE);
+	if(imm > vm_size + STACK_SIZE){ exit(0); };
 	if (flags & FLAG_ABOVE){
 		if (imm & 1){
 			imm &= ~1;
@@ -193,7 +189,7 @@ void ja(uint64_t imm){
 }
 
 void jb(uint64_t imm){
-	//assert(imm <= vm_size - 8);
+	if(imm > vm_size - 8){ exit(0); };
 	if (flags & FLAG_BELOW){
 		if (imm & 1){
 			imm &= ~1;
@@ -207,7 +203,7 @@ void jb(uint64_t imm){
 }
 
 void jeq(uint64_t imm){
-	//assert(imm <= vm_size - 8);
+	if(imm > vm_size - 8){ exit(0); };
 	if (!(flags & FLAG_BELOW) && !(flags & FLAG_ABOVE)){
 		if (imm & 1){
 			imm &= ~1;
@@ -224,9 +220,9 @@ void call_imm(REG* regs, uint8_t* vm_data, uint64_t imm){
 	
 	uint64_t sp = regs[SP];
 
-	//assert(imm <= vm_size);
+	if(imm > vm_size){ exit(0); };
 	
-	//assert(sp < (vm_size + STACK_SIZE));
+	if(sp > (vm_size + STACK_SIZE)){ exit(0); };
 	
 	memcpy((void *)(vm_data + sp), &pc, sizeof(pc));
 	regs[SP] += 8;
@@ -243,12 +239,11 @@ void call_imm(REG* regs, uint8_t* vm_data, uint64_t imm){
 
 void call_reg(REG* regs, uint8_t* vm_data, uint64_t imm){
 	
-	//assert(imm >= 0);
-	//assert(imm <= 7);
+	if(imm > 7){ exit(0); };
 	
 	uint64_t sp = regs[SP];
 
-	//assert(sp < (vm_size + STACK_SIZE));
+	if(sp >= (vm_size + STACK_SIZE)){ exit(0); };
 
 	
 	memcpy((void *)(vm_data + sp), &pc, sizeof(pc));
@@ -270,7 +265,7 @@ void call_reg(REG* regs, uint8_t* vm_data, uint64_t imm){
 
 void cmp_imm(REG* regs, uint8_t reg_nb, uint64_t imm){
 	
-	//assert(reg_nb <= 8);
+	if(reg_nb > 8){ exit(0); };
 
 	uint64_t op1 = regs[reg_nb];
 	uint64_t op2 = imm;
@@ -297,8 +292,8 @@ void cmp_imm(REG* regs, uint8_t reg_nb, uint64_t imm){
 
 void cmp_reg(REG* regs, uint8_t reg_nb, uint64_t imm){
 	
-	//assert(reg_nb <= 8);
-	//assert(imm <= 8);
+	if(reg_nb > 8){ exit(0); };
+	if(imm > 8){ exit(0); };
 
 	uint64_t op1 = regs[reg_nb];
 	uint64_t op2 = regs[imm];
@@ -331,7 +326,7 @@ void sys_call(REG* regs, uint8_t* vm_data){
 
 	switch(syscall_nb){
 		case SYS_PUTS:
-			//assert(arg1 <= vm_size + STACK_SIZE);
+			if(arg1 > vm_size + STACK_SIZE){ exit(0); };
 			puts((char *)vm_data + arg1);
 			break;
 		case SYS_GETCHAR:
@@ -352,8 +347,8 @@ void sys_call(REG* regs, uint8_t* vm_data){
 
 void mov(REG* regs, uint8_t op1, uint8_t op2){
 
-	//assert(op1 <= 8);
-	//assert(op2 <= 8);
+	if(op1 > 8){ exit(0); };
+	if(op2 > 8){ exit(0); };
 
 	regs[op1] = regs[op2];
 	return;
